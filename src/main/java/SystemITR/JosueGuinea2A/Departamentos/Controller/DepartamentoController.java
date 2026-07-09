@@ -15,6 +15,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/departamentos")
 public class DepartamentoController {
 
+
+    /**
+     * Inyectando la capa service sobre el controller
+     */
+    private final DepartamentosService service;
+
+    public DepartamentoController(DepartamentosService service) {
+        this.service = service;
+    }
+
     /**
      * Nuevo recursos : Ingresar información -> POST
      * Obtener recursos: GET
@@ -24,7 +34,8 @@ public class DepartamentoController {
     @PostMapping
     public ResponseEntity<ApiResponse<DepartamentoDTO>> nuevoDepartamento(@Valid @RequestBody DepartamentoDTO json){
         try{
-            ApiResponse<DepartamentoDTO> respuesta = new ApiResponse<>(true, "Datos ingresados exitosamente", json);
+            DepartamentoDTO dto = service.nuevoDepartamento(json);
+            ApiResponse<DepartamentoDTO> respuesta = new ApiResponse<>(true, "Datos ingresados exitosamente", dto);
             return ResponseEntity.ok(respuesta);
         }catch (Exception e){
             e.printStackTrace();
