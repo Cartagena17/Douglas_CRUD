@@ -4,13 +4,14 @@ import SystemITR.JosueGuinea2A.Departamentos.DTO.DepartamentoDTO;
 import SystemITR.JosueGuinea2A.Departamentos.Service.DepartamentosService;
 import SystemITR.JosueGuinea2A.Response.ApiResponse;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
+@Slf4j
 @RestController
 @RequestMapping("/api/departamentos")
 public class DepartamentoController {
@@ -33,13 +34,41 @@ public class DepartamentoController {
      */
     @PostMapping
     public ResponseEntity<ApiResponse<DepartamentoDTO>> nuevoDepartamento(@Valid @RequestBody DepartamentoDTO json){
-        try{
+        try {
             DepartamentoDTO dto = service.nuevoDepartamento(json);
-            ApiResponse<DepartamentoDTO> respuesta = new ApiResponse<>(true, "Datos ingresados exitosamente", dto);
-            return ResponseEntity.ok(respuesta);
+            if (dto != null) {
+                log.info("Nuevo Departamento registrado" + dto);
+                ApiResponse<DepartamentoDTO> respuesta = new ApiResponse<>(true, "Datos ingresados exitosamente", dto);
+                return ResponseEntity.ok(respuesta);
+            }
+            log.warn("Intento de inserción fallida: "+json);
+            ApiResponse<DepartamentoDTO> respuestaFallida = new ApiResponse<>(false,"Intento fallido de insercion", null);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuestaFallida);
+
         }catch (Exception e){
+            log.error("El proceso presentó un fallo inesperado, consulte con el administrador");
             e.printStackTrace();
             ApiResponse<DepartamentoDTO> respuesta = new ApiResponse<>(false, "El proceso no se pudo completar", json);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(respuesta);
+        }
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<DepartamentoDTO>>> obtenerDatos(){
+        try {
+            List<DepartamentoDTO> lista = service.obtenerTodo();
+            if (lista != null){
+                log.info("Datos de departamentos consultados");
+                ApiResponse<List<DepartamentoDTO>> respuestaExito = new ApiResponse<>(true, "Datos encontrados", lista);
+                return ResponseEntity.ok(respuestaExito);
+            }
+            log.info("Datos no encontrados");
+            ApiResponse<List<DepartamentoDTO>> respuestaNoEncontrada = new ApiResponse<>(true, "Datos encontrados", null);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(respuestaNoEncontrada);
+        } catch (Exception e) {
+            log.error("El proceso presentó un fallo inesperado, consulte con el administrador");
+            e.printStackTrace();
+            ApiResponse<List<DepartamentoDTO>> respuesta = new ApiResponse<>(false, "El proceso no se pudo completar", null);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(respuesta);
         }
     }
